@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWAP TFC v2 — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e17;--card:#111827;--card2:#1a2332;--bdr:#1f2937;--t1:#f1f5f9;--t2:#94a3b8;--t3:#64748b;--grn:#22c55e;--grn-bg:rgba(34,197,94,.1);--red:#ef4444;--red-bg:rgba(239,68,68,.1);--blu:#3b82f6;--blu-bg:rgba(59,130,246,.1);--amb:#f59e0b;--amb-bg:rgba(245,158,11,.1);--pur:#a78bfa;--f:\'Plus Jakarta Sans\',sans-serif;--m:\'JetBrains Mono\',monospace}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--t1);font-family:var(--f);font-size:13px}
+.sh{max-width:1300px;margin:0 auto;padding:16px}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bdr)}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-family:var(--m)}
+.hdr-t{font-size:17px;font-weight:700;letter-spacing:-.02em}.hdr-s{font-size:10px;color:var(--t3);font-family:var(--m);text-transform:uppercase;letter-spacing:.06em}
+.sess{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:16px;font-size:11px;font-weight:600;font-family:var(--m)}
+.sess-on{background:var(--grn-bg);color:var(--grn)}.sess-off{background:rgba(100,116,139,.1);color:var(--t3)}
+.dot{width:6px;height:6px;border-radius:50%;animation:p 2s infinite}.dot-grn{background:var(--grn)}.dot-gry{background:var(--t3)}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.acts{display:flex;gap:6px}
+.btn{padding:6px 14px;border-radius:7px;border:1px solid var(--bdr);background:var(--card);color:var(--t1);font-family:var(--m);font-size:11px;cursor:pointer;font-weight:500}
+.btn:hover{background:var(--card2)}.btn-p{background:var(--blu);border-color:var(--blu);color:#fff}.btn-d{border-color:var(--red);color:var(--red)}
+
+.kpi-g{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px}
+.kpi-l{font-size:9px;color:var(--t3);text-transform:uppercase;font-family:var(--m);letter-spacing:.07em;margin-bottom:6px}
+.kpi-v{font-size:20px;font-weight:700;font-family:var(--m);letter-spacing:-.03em}
+.kpi-u{font-size:10px;color:var(--t3);margin-top:3px;font-family:var(--m)}
+.grn{color:var(--grn)}.red{color:var(--red)}.blu{color:var(--blu)}.amb{color:var(--amb)}.pur{color:var(--pur)}
+
+.g2{display:grid;grid-template-columns:5fr 3fr;gap:14px;margin-bottom:16px}
+.cd{background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden}
+.cd-h{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.cd-t{font-size:12px;font-weight:600}.cd-b{padding:14px}
+.ch-c{position:relative;height:240px}
+
+/* Position cards */
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px}
+.pos-card{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px}
+.pos-sym{font-size:15px;font-weight:700;font-family:var(--m);display:flex;align-items:center;gap:8px}
+.pos-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;text-transform:uppercase}
+.bg-long{background:var(--grn-bg);color:var(--grn)}.bg-short{background:var(--red-bg);color:var(--red)}
+.bg-partial{background:var(--amb-bg);color:var(--amb)}.bg-runner{background:rgba(167,139,250,.1);color:var(--pur)}
+.pos-row{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;font-family:var(--m)}
+.pos-lbl{color:var(--t3)}.pos-val{font-weight:500}
+.pos-pnl{font-size:18px;font-weight:700;font-family:var(--m);margin-top:8px}
+
+/* Trades table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9px;color:var(--t3);text-transform:uppercase;font-family:var(--m);letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);font-weight:500}
+.tbl td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:var(--m);font-size:11px}
+.tbl tr:hover{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:600;text-transform:uppercase}
+.empty{text-align:center;padding:30px;color:var(--t3);font-size:12px}
+
+/* Slots visual */
+.slots{display:flex;gap:4px;margin-left:12px}
+.slot{width:10px;height:10px;border-radius:3px;border:1px solid var(--bdr)}
+.slot-empty{background:transparent}.slot-active{background:var(--amb)}.slot-partial{background:var(--grn)}.slot-runner{background:var(--pur)}
+
+/* Universe bar */
+.uni{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.uni-tag{font-size:10px;font-family:var(--m);padding:3px 8px;border-radius:5px;background:var(--card);border:1px solid var(--bdr);color:var(--t2)}
+.uni-tag.held{border-color:var(--amb);color:var(--amb)}
+
+@media(max-width:900px){.kpi-g{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-g{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="sh">
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="logo">V2</div>
+      <div><div class="hdr-t">VWAP TFC Bot</div><div class="hdr-s">Multi-coin · Session-aware · Paper</div></div>
+      <div class="sess sess-off" id="sessTag"><span class="dot dot-gry" id="sessDot"></span><span id="sessText">CLOSED</span></div>
+      <div class="slots" id="slotsVis"></div>
+    </div>
+    <div class="acts">
+      <button class="btn btn-p" onclick="manualRun()">▶ Scan Now</button>
+      <button class="btn btn-d" onclick="resetBot()">Reset</button>
+    </div>
+  </div>
+
+  <!-- Universe -->
+  <div class="uni" id="uniBar"></div>
+
+  <!-- KPIs -->
+  <div class="kpi-g">
+    <div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v" id="kBal">$500</div><div class="kpi-u" id="kBalU">Starting: $500</div></div>
+    <div class="kpi"><div class="kpi-l">Total P&L</div><div class="kpi-v" id="kPnl">$0.00</div><div class="kpi-u" id="kPnlP">0.0%</div></div>
+    <div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v" id="kWR">—</div><div class="kpi-u" id="kWL">0W / 0L</div></div>
+    <div class="kpi"><div class="kpi-l">Open / Slots</div><div class="kpi-v blu" id="kSlots">0 / 5</div><div class="kpi-u" id="kToday">0 trades today</div></div>
+    <div class="kpi"><div class="kpi-l">Daily P&L</div><div class="kpi-v" id="kDay">$0.00</div><div class="kpi-u">Today</div></div>
+    <div class="kpi"><div class="kpi-l">Max DD</div><div class="kpi-v red" id="kDD">0.0%</div><div class="kpi-u" id="kPeak">Peak: $500</div></div>
+  </div>
+
+  <!-- Open Positions -->
+  <div class="cd" style="margin-bottom:14px">
+    <div class="cd-h"><span class="cd-t">Open Positions</span><span style="font-size:10px;color:var(--t3);font-family:var(--m)" id="posCount">0 active</span></div>
+    <div class="cd-b">
+      <div class="pos-grid" id="posGrid"><div class="empty">No open positions — bot is scanning</div></div>
+    </div>
+  </div>
+
+  <!-- Chart + Last scan -->
+  <div class="g2">
+    <div class="cd"><div class="cd-h"><span class="cd-t">Equity Curve</span></div><div class="cd-b"><div class="ch-c"><canvas id="eqChart"></canvas></div></div></div>
+    <div class="cd"><div class="cd-h"><span class="cd-t">Last Scan</span></div><div class="cd-b" id="scanInfo" style="font-family:var(--m);font-size:11px;color:var(--t2)">Waiting for first scan...</div></div>
+  </div>
+
+  <!-- Trade History -->
+  <div class="cd">
+    <div class="cd-h"><span class="cd-t">Trade History</span><span style="font-size:10px;color:var(--t3);font-family:var(--m)" id="trdCount">0</span></div>
+    <div id="trdBody" style="overflow-x:auto"><div class="empty">No trades yet</div></div>
+  </div>
+</div>
+
+<script>
+const API=window.location.origin;let chart=null;
+
+function initChart(){
+  chart=new Chart(document.getElementById('eqChart').getContext('2d'),{
+    type:'line',data:{labels:[],datasets:[{label:'Equity',data:[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono'",size:9},maxTicksLimit:8},grid:{color:'rgba(255,255,255,.04)'}},
+              y:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono'",size:9},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,.04)'}}}}
+  });
+}
+
+async function fetchAll(){
+  try{
+    const[st,tr,eq]=await Promise.all([fetch(API+'/api/status').then(r=>r.json()),fetch(API+'/api/trades').then(r=>r.json()),fetch(API+'/api/equity').then(r=>r.json())]);
+    updateKPIs(st.account);updateSession(st);updatePositions(st.positions||[]);updateUniverse(st.universe||[],st.positions||[]);
+    updateScan(st.last_run);updateTrades(tr.trades,tr.total);updateChart(eq);
+  }catch(e){console.error(e)}
+}
+
+function updateKPIs(a){if(!a)return;const $=id=>document.getElementById(id);
+  $('kBal').textContent='$'+a.balance.toFixed(2);$('kBal').className='kpi-v '+(a.balance>=a.starting_balance?'grn':'red');
+  $('kBalU').textContent='Starting: $'+a.starting_balance;
+  $('kPnl').textContent=(a.total_pnl>=0?'+$':'-$')+Math.abs(a.total_pnl).toFixed(2);$('kPnl').className='kpi-v '+(a.total_pnl>=0?'grn':'red');
+  $('kPnlP').textContent=(a.total_pnl_pct>=0?'+':'')+a.total_pnl_pct+'%';
+  $('kWR').textContent=a.total_trades>0?a.win_rate+'%':'—';$('kWR').className='kpi-v '+(a.win_rate>=50?'grn':a.total_trades?'amb':'');
+  $('kWL').textContent=a.wins+'W / '+a.losses+'L';
+  $('kSlots').textContent=a.open_positions+' / '+(a.open_positions+a.open_slots);
+  $('kToday').textContent=a.trades_today+' trades today';
+  $('kDay').textContent=(a.daily_pnl>=0?'+$':'-$')+Math.abs(a.daily_pnl).toFixed(2);$('kDay').className='kpi-v '+(a.daily_pnl>=0?'grn':'red');
+  $('kDD').textContent=a.max_drawdown_pct+'%';$('kPeak').textContent='Peak: $'+a.peak_equity;
+}
+
+function updateSession(st){
+  const tag=document.getElementById('sessTag'),dot=document.getElementById('sessDot'),txt=document.getElementById('sessText');
+  const active=st.session_active;const names={us_open:'US OPEN',eu_open:'EU OPEN',asia_open:'ASIA OPEN',closed:'CLOSED'};
+  txt.textContent=names[st.session]||st.session;
+  tag.className='sess '+(active?'sess-on':'sess-off');dot.className='dot '+(active?'dot-grn':'dot-gry');
+  // Slots visual
+  const slots=document.getElementById('slotsVis');const max=5;const pos=st.positions||[];
+  slots.innerHTML='';for(let i=0;i<max;i++){const d=document.createElement('div');d.className='slot ';
+    if(i<pos.length){d.className+= pos[i].is_runner?'slot-runner':pos[i].partial_closed?'slot-partial':'slot-active'}
+    else{d.className+='slot-empty'}slots.appendChild(d);}
+}
+
+function updatePositions(positions){
+  const grid=document.getElementById('posGrid');const cnt=document.getElementById('posCount');
+  cnt.textContent=positions.length+' active';
+  if(!positions.length){grid.innerHTML='<div class="empty">No open positions — bot is scanning</div>';return}
+  grid.innerHTML=positions.map(p=>{
+    const sideClass=p.side==='long'?'bg-long':'bg-short';
+    const pnlClass=p.unrealized_pct>=0?'grn':'red';
+    const statusBadge=p.is_runner?'<span class="pos-badge bg-runner">RUNNER</span>':p.partial_closed?'<span class="pos-badge bg-partial">PARTIAL ✓</span>':'';
+    return `<div class="pos-card">
+      <div class="pos-sym"><a href="https://www.kraken.com/prices/${p.symbol.toLowerCase()}" target="_blank" style="color:var(--t1);text-decoration:none">${p.symbol}</a><span class="pos-badge ${sideClass}">${p.side}</span>${statusBadge}</div>
+      <div class="pos-pnl ${pnlClass}">${p.unrealized_pct>=0?'+':''}${p.unrealized_pct}%</div>
+      <div class="pos-row"><span class="pos-lbl">Entry</span><span class="pos-val">$${p.entry_price.toLocaleString()}</span></div>
+      <div class="pos-row"><span class="pos-lbl">Current</span><span class="pos-val">$${(p.current_price||0).toLocaleString()}</span></div>
+      <div class="pos-row"><span class="pos-lbl">Stop Loss</span><span class="pos-val red">$${p.stop_loss.toLocaleString()}</span></div>
+      <div class="pos-row"><span class="pos-lbl">Target</span><span class="pos-val grn">$${(p.target||0).toLocaleString()}</span></div>
+      <div class="pos-row"><span class="pos-lbl">Score</span><span class="pos-val">${p.score}</span></div>
+      <div class="pos-row"><span class="pos-lbl">Bars</span><span class="pos-val">${p.bars_held}</span></div>
+      <div style="margin-top:6px;font-size:10px;color:var(--t3)">${p.reason}</div>
+    </div>`}).join('');
+}
+
+function updateUniverse(universe,positions){
+  const bar=document.getElementById('uniBar');const held=new Set((positions||[]).map(p=>p.symbol));
+  bar.innerHTML=universe.map(s=>`<div class="uni-tag ${held.has(s)?'held':''}">${s}</div>`).join('');
+}
+
+function updateScan(lr){
+  if(!lr)return;const el=document.getElementById('scanInfo');
+  const time=lr.timestamp?new Date(lr.timestamp).toLocaleTimeString():'—';
+  el.innerHTML=`<div style="margin-bottom:8px"><span style="color:var(--t3)">Time:</span> ${time}</div>
+    <div style="margin-bottom:4px"><span style="color:var(--t3)">Session:</span> <span style="color:${lr.session!=='closed'?'var(--grn)':'var(--t3)'}">${lr.session}</span></div>
+    <div style="margin-bottom:4px"><span style="color:var(--t3)">Scanned:</span> ${lr.scanned||0} coins</div>
+    <div style="margin-bottom:4px"><span style="color:var(--t3)">Setups found:</span> ${lr.candidates||0}</div>
+    <div style="margin-bottom:4px"><span style="color:var(--t3)">Action:</span> ${lr.action||'—'}</div>
+    ${lr.error?`<div style="color:var(--red)">Error: ${lr.error}</div>`:''}
+    ${(lr.new_trades||[]).length?`<div style="margin-top:6px;color:var(--grn)">New: ${lr.new_trades.map(t=>t.symbol+'('+t.score+')').join(', ')}</div>`:''}`;
+}
+
+function updateTrades(trades,total){
+  document.getElementById('trdCount').textContent=total+' trades';
+  if(!trades||!trades.length){return}
+  let h=`<table class="tbl"><thead><tr><th>#</th><th>Symbol</th><th>Side</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th><th>Score</th><th>SL</th><th>Target</th></tr></thead><tbody>`;
+  trades.forEach(t=>{
+    const sc=t.side==='long'?'bg-long':'bg-short';const pc=t.pnl>=0?'grn':'red';
+    h+=`<tr>
+      <td>${t.id||''}</td>
+      <td><a href="https://www.kraken.com/prices/${(t.symbol||'').toLowerCase()}" target="_blank" style="color:var(--blu);text-decoration:none">${t.symbol||'—'}</a></td>
+      <td><span class="badge ${sc}">${t.side||''}</span></td>
+      <td>$${(t.entry_price||0).toLocaleString()}<br><span style="color:var(--t3);font-size:9px">${t.entry_time?new Date(t.entry_time).toLocaleString():''}</span></td>
+      <td>$${(t.exit_price||0).toLocaleString()}<br><span style="color:var(--t3);font-size:9px">${t.exit_time?new Date(t.exit_time).toLocaleString():''}</span></td>
+      <td class="${pc}">${t.pnl>=0?'+':''}$${(t.pnl||0).toFixed(2)}<br><span style="font-size:9px">${t.pnl_pct||0}%</span></td>
+      <td style="font-size:10px;color:var(--t2)">${t.reason||''}</td>
+      <td>${t.score||''}</td>
+      <td style="color:var(--red);font-size:10px">${t.stop_loss?'$'+t.stop_loss.toLocaleString():'—'}</td>
+      <td style="color:var(--grn);font-size:10px">${t.target?'$'+t.target.toLocaleString():'—'}</td>
+    </tr>`;});
+  h+='</tbody></table>';document.getElementById('trdBody').innerHTML=h;
+}
+
+function updateChart(data){
+  if(!chart)return;
+  if(!data.curve||!data.curve.length){chart.data.labels=['Start'];chart.data.datasets[0].data=[data.starting_balance||500];chart.update();return}
+  const labels=['Start',...data.curve.map(p=>{const d=new Date(p.time);return d.toLocaleDateString('en',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})})];
+  chart.data.labels=labels;chart.data.datasets[0].data=[data.starting_balance,...data.curve.map(p=>p.equity)];chart.update();
+}
+
+async function manualRun(){try{await fetch(API+'/api/run',{method:'POST'});await fetchAll()}catch(e){console.error(e)}}
+async function resetBot(){if(!confirm('Reset paper account?'))return;try{await fetch(API+'/api/reset',{method:'POST'});await fetchAll()}catch(e){console.error(e)}}
+
+initChart();fetchAll();setInterval(fetchAll,30000);
+</script>
+</body>
+</html>
