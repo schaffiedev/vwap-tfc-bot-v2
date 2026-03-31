@@ -67,8 +67,8 @@ class Config:
     RUNNER_TRAIL: float = 0.04        # 4% trail on runner
 
     # Stale
-    STALE_BARS: int = 18              # 18 candles (~18×5min = 1.5h on 5m)
-    STALE_MIN_MOVE: float = 0.005     # 0.5%
+    STALE_BARS: int = 216             # 216 × 5min = 18 hours (matches Sniper V4)
+    STALE_MIN_MOVE: float = 0.008     # 0.8% minimum move
 
     # Safety
     DAILY_LOSS_LIMIT: float = 0.05
